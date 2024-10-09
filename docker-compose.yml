@@ -34,16 +34,17 @@ services:
     working_dir: /var/www
 
   db:
-    image: mysql:latest
+    image: mysql:8.0
+    command: --default-authentication-plugin=mysql_native_password
     container_name: example_name_db
-    restart: always
-    volumes:
-      - example_name_db_volume:/var/lib/mysql
     environment:
       MYSQL_DATABASE: test
       MYSQL_USER: test-user
       MYSQL_PASSWORD: root
       MYSQL_ROOT_PASSWORD: root
+    restart: always
+    volumes:
+      - example_name_db_volume:/var/lib/mysql
     ports:
       - "3306:3306"
 
