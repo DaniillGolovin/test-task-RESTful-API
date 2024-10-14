@@ -1,9 +1,6 @@
 <?php
 
-use App\Http\Controllers\Api\LoginController;
-use App\Http\Controllers\Api\RoleController;
-use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\V1\LoginController;
 use Illuminate\Support\Facades\Route;
 
 /*
