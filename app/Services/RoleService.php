@@ -16,28 +16,44 @@ class RoleService
 
     public function getAllRoles()
     {
-        return $this->roleRepository->getAll();
+        return cache()->remember('roles:all', 60 * 60, function () {
+            return $this->roleRepository->getAll();
+        });
     }
 
     public function getRoleById(int $id): Role
     {
-        return $this->roleRepository->find($id);
+        return cache()->remember("role:{$id}", 60 * 60, function () use ($id) {
+            return $this->roleRepository->find($id);
+        });
     }
 
     public function createRole(array $data): Role
     {
+        cache()->forget('roles:all');
+
         return $this->roleRepository->create($data);
     }
 
     public function updateRole(array $data, int $id): Role
     {
-        $userById = $this->roleRepository->find($id);
+        $roleById = $this->roleRepository->find($id);
 
-        return $this->roleRepository->update($userById, $data);
+        cache()->forget("role:{$id}");
+        cache()->forget('roles:all');
+
+        return $this->roleRepository->update($roleById, $data);
     }
 
     public function deleteRole(int $id): ?bool
     {
-        return $this->roleRepository->delete($id);
+        $result = $this->roleRepository->delete($id);
+
+        if ($result) {
+            cache()->forget("role:{$id}");
+            cache()->forget('roles:all');
+        }
+
+        return $result;
     }
 }

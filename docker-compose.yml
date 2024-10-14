@@ -66,6 +66,7 @@ services:
     container_name: example_name_redis
     ports:
       - "6379:6379"
+    command: redis-server --bind 0.0.0.0
 
 volumes:
   example_name_db_volume:

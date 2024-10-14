@@ -22,8 +22,13 @@ RUN curl -sS https://getcomposer.org/installer | php -- \
     --filename=composer \
     --install-dir=/usr/local/bin
 
-#Необходимое расширение PHP PDO для PostgreSQL
+# Required PHP PDO extension for PostgreSQL
 RUN docker-php-ext-install pdo_pgsql
+
+# Installing the Redis extension
+RUN pecl install -o -f redis \
+&&  rm -rf /tmp/pear \
+&&  echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini
 
 # Installing Node.js and Npm
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \

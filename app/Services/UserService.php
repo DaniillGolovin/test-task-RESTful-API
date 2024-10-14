@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Events\UserRegistered;
 use App\Models\User;
 use App\Repositories\UserRepository;
 use Illuminate\Support\Facades\Hash;
@@ -17,18 +18,28 @@ class UserService
 
     public function getAllUsers()
     {
-        return $this->userRepository->getAll();
+        return cache()->remember('users:all', 60 * 60, function () {
+            return $this->userRepository->getAll();
+        });
     }
 
     public function getUserById(int $id): User
     {
-        return $this->userRepository->find($id);
+        return cache()->remember("user:{$id}", 60 * 60, function () use ($id) {
+            return $this->userRepository->find($id);
+        });
     }
 
     public function createUser(array $data): User
     {
         $data['password'] = Hash::make($data['password']);
-        return $this->userRepository->create($data);
+        $user = $this->userRepository->create($data);
+
+        event(new UserRegistered($user));
+
+        cache()->forget('users:all');
+
+        return $user;
     }
 
     public function updateUser(array $data, int $id): User
@@ -36,11 +47,21 @@ class UserService
         $userById = $this->userRepository->find($id);
         $data['password'] = Hash::make($data['password']);
 
+        cache()->forget("user:{$id}");
+        cache()->forget('users:all');
+
         return $this->userRepository->update($userById, $data);
     }
 
     public function deleteUser(int $id): ?bool
     {
-        return $this->userRepository->delete($id);
+        $result = $this->userRepository->delete($id);
+
+        if ($result) {
+            cache()->forget("user:{$id}");
+            cache()->forget('users:all');
+        }
+
+        return $result;
     }
 }

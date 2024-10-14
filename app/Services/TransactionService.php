@@ -16,16 +16,22 @@ class TransactionService
 
     public function getAllTransactions()
     {
-        return $this->transactionRepository->getAll();
+        return cache()->remember('transactions:all', 60 * 60, function () {
+            return $this->transactionRepository->getAll();
+        });
     }
 
     public function getTransactionById(int $id): Transaction
     {
-        return $this->transactionRepository->find($id);
+        return cache()->remember("transaction:{$id}", 60 * 60, function () use ($id) {
+            return $this->transactionRepository->find($id);
+        });
     }
 
     public function createTransaction(array $data): Transaction
     {
+        cache()->forget('transactions:all');
+
         return $this->transactionRepository->create($data);
     }
 
@@ -33,11 +39,21 @@ class TransactionService
     {
         $transactionById = $this->transactionRepository->find($id);
 
+        cache()->forget("transaction:{$id}");
+        cache()->forget('transactions:all');
+
         return $this->transactionRepository->update($transactionById, $data);
     }
 
     public function deleteTransaction(int $id): ?bool
     {
-        return $this->transactionRepository->delete($id);
+        $result = $this->transactionRepository->delete($id);
+
+        if ($result) {
+            cache()->forget("transaction:{$id}");
+            cache()->forget('transactions:all');
+        }
+
+        return $result;
     }
 }
